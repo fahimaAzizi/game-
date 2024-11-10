@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face-to-Face Fighting Game with Health Reduction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: black;
+            color: white;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .game-container {
+            width: 800px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+        }
+        #character1Display, #character2Display {
+            white-space: pre-wrap;
+            font-family: monospace;
+            position: absolute;
+            top: 40%;
+            transform: translateY(-50%);
+            transition: left 0.3s;
+        }
+        #character1Display { left: 35%; text-align: right; }
+        #character2Display { left: 65%; text-align: left; }
+
+        /* Health bars */
+        .health-bar {
+            width: 150px;
+            height: 20px;
+            background-color: red;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        .health-bar-inner {
+            height: 100%;
+            background-color: green;
+            border-radius: 5px;
+        }
+        #endMessage {
+            font-size: 24px;
+            color: yellow;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Face-to-Face Fighting Game</h1>
+
+        <!-- Health bars -->
+        <div>
+            <h3>Fighter 1</h3>
+            <div class="health-bar"><div id="health1Bar" class="health-bar-inner" style="width: 100%;"></div></div>
+        </div>
+        <div>
+            <h3>Fighter 2</h3>
+            <div class="health-bar"><div id="health2Bar" class="health-bar-inner" style="width: 100%;"></div></div>
+        </div>
+
+        <!-- Characters -->
+        <div id="character1Display"></div>
+        <div id="character2Display"></div>
+
+        <!-- End Game Message -->
+        <div id="endMessage"></div>
+        <button onclick="resetGame()" style="display: none;" id="restartButton">Restart Game</button>
+    </div>
+
+    <script>
+        const characterStates = {
+            1: { rightHandUp: false, leftHandUp: false, rightLegOut: false, position: 35, health: 100 },
+            2: { rightHandUp: false, leftHandUp: false, rightLegOut: false, position: 65, health: 100 }
+        };
+
+        const damageAmount = 10;
+        let gameEnded = false;
+
+        function displayCharacter(character) {
+            const { rightHandUp, leftHandUp, rightLegOut, position, health } = characterStates[character];
+            const head = "   O  ";
+            let arms;
+            let body = "     |   ";
+            let legs;
+
+            if (character === 1) {
+                if (leftHandUp && rightHandUp) arms = "   \\ | / ";
+                else if (leftHandUp) arms = "   \\ |   ";
+                else if (rightHandUp) arms = "     | / ";
+                else arms = "   /  | \\ ";
+
+                legs = rightLegOut ? "    /    \\" : "    / \\   ";
+            } else if (character === 2) {
+                if (leftHandUp && rightHandUp) arms = "   \\ | / ";
+                else if (leftHandUp) arms = "     | / ";
+                else if (rightHandUp) arms = "   \\ |   ";
+                else arms = "   / | \\ ";
+
+                legs = rightLegOut ? "   /    \\ " : "   / \\    ";
+            }
+
+            document.getElementById(`character${character}Display`).textContent = `${head}\n${arms}\n${body}\n${legs}`;
+            document.getElementById(`character${character}Display`).style.left = `${position}%`;
+
+            document.getElementById(`health${character}Bar`).style.width = `${health}%`;
+        }
+
+        function checkCollision() {
+            if (gameEnded) return;
+
+            const distance = Math.abs(characterStates[1].position - characterStates[2].position);
+
+            if (distance < 5) {
+                if (characterStates[1].position < characterStates[2].position && (characterStates[1].rightHandUp || characterStates[1].leftHandUp)) {
+                    characterStates[2].health = Math.max(0, characterStates[2].health - damageAmount);
+                }
+                else if (characterStates[2].position < characterStates[1].position && (characterStates[2].rightHandUp || characterStates[2].leftHandUp)) {
+                    characterStates[1].health = Math.max(0, characterStates[1].health - damageAmount);
+                }
+            }
+
+            displayCharacter(1);
+            displayCharacter(2);
+            checkGameOver();
+        }
+
+        function checkGameOver() {
+            if (characterStates[1].health <= 0 || characterStates[2].health <= 0) {
+                gameEnded = true;
+                document.getElementById('endMessage').textContent = characterStates[1].health <= 0 ? "Fighter 2 Wins!" : "Fighter 1 Wins!";
+                document.getElementById('restartButton').style.display = 'inline-block';
+            }
+        }
+
+        function moveBack(character) {
+            if (!gameEnded) {
+                characterStates[character].position = Math.max(0, characterStates[character].position - 5);
+                checkCollision();
+            }
+        }
+
+        function moveForward(character) {
+            if (!gameEnded) {
+                characterStates[character].position = Math.min(100, characterStates[character].position + 5);
+                checkCollision();
+            }
+        }
+
+        function toggleRightHand(character) {
+            if (!gameEnded) {
+                characterStates[character].rightHandUp = !characterStates[character].rightHandUp;
+                displayCharacter(character);
+            }
+        }
+
+        function toggleLeftHand(character) {
+            if (!gameEnded) {
+                characterStates[character].leftHandUp = !characterStates[character].leftHandUp;
+                displayCharacter(character);
+            }
+        }
+
+        function toggleRightLeg(character) {
+            if (!gameEnded) {
+                characterStates[character].rightLegOut = !characterStates[character].rightLegOut;
+                displayCharacter(character);
+            }
+        }
+
+        function resetGame() {
+            characterStates[1].health = 100;
+            characterStates[2].health = 100;
+            characterStates[1].position = 35;
+            characterStates[2].position = 65;
+            gameEnded = false;
+            document.getElementById('endMessage').textContent = '';
+            document.getElementById('restartButton').style.display = 'none';
+            displayCharacter(1);
+            displayCharacter(2);
+        }
+
+        document.addEventListener('keydown', function(event) {
+            switch (event.key) {
+                case 'a': moveBack(1); break;
+                case 'd': moveForward(1); break;
+                case 'w': toggleRightHand(1); break;
+                case 's': toggleLeftHand(1); break;
+                case 'x': toggleRightLeg(1); break;
+                case 'j': moveBack(2); break;
+                case 'l': moveForward(2); break;
+                case 'i': toggleRightHand(2); break;
+                case 'k': toggleLeftHand(2); break;
+                case 'm': toggleRightLeg(2); break;
+            }
+        });
+
+        displayCharacter(1);
+        displayCharacter(2);
+        setInterval(checkCollision, 100);
+    </script>
+</body>
+</html>
