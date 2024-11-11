@@ -1,0 +1,22 @@
+{
+  "name": "spotify.com",
+  "version": "1.0.0",
+  "description": "this is new project",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "spoify",
+    "music"
+  ],
+  "author": "azizi",
+  "license": "ISC",
+  "dependencies": {
+    "experss": "^0.0.1-security",
+    "fi": "^1.0.16",
+    "nodemo": "^1.0.0",
+    "slug": "^10.0.0"
+  }
+}
